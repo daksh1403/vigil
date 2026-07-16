@@ -36,6 +36,8 @@ class ScanRead(ORMModel):
     scan_type: str
     trigger: str
     progress: int
+    finding_count: int = 0
+    duration_sec: int | None = None
     error: str | None
     started_at: datetime | None
     finished_at: datetime | None
@@ -44,7 +46,6 @@ class ScanRead(ORMModel):
 
 class ScanDetail(ScanRead):
     tasks: list[ScanTaskRead] = []
-    finding_count: int = 0
 
 
 class ScanDiffRead(BaseModel):

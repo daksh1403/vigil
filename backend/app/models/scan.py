@@ -39,9 +39,11 @@ class Scan(Base):
     initiated_by: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("users.id"))
     error: Mapped[str | None] = mapped_column(Text)
     progress: Mapped[int] = mapped_column(Integer, default=0)  # 0..100
+    finding_count: Mapped[int] = mapped_column(Integer, default=0)
+    duration_sec: Mapped[int | None] = mapped_column(Integer)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     project = relationship("Project", back_populates="scans")
     target = relationship("Target", back_populates="scans")

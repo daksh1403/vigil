@@ -103,6 +103,7 @@ def run_scan(db: Session, scan_id: uuid.UUID) -> None:
 
     scan.status = ScanStatus.completed
     scan.progress = 100
+    scan.finding_count = total_findings
     scan.finished_at = datetime.now(timezone.utc)
     db.commit()
     log.info("orchestrator.complete", scan_id=str(scan_id), findings=total_findings)
