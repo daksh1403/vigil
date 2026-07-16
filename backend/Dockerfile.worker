@@ -1,0 +1,12 @@
+# Worker image = scanner binaries (from scanner-bin) + the backend app.
+# The worker runs scanners as subprocesses, so it needs both the CLIs and the
+# Python app. Built FROM the local vigil-scanner-bin image.
+FROM vigil-scanner-bin:latest
+
+WORKDIR /app
+COPY pyproject.toml ./
+RUN pip install --no-cache-dir -e ".[dev]"
+COPY . .
+
+ENTRYPOINT []
+CMD ["celery", "-A", "app.workers.celery_app", "worker", "-l", "info", "-Q", "scans,triage,default"]

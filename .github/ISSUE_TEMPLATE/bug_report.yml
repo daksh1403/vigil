@@ -1,0 +1,9 @@
+---
+name: Bug report
+about: Report a bug in VIGIL
+labels: ["bug", "triage"]
+---
+**Describe the bug**
+**To reproduce**
+**Expected behavior**
+**Environment** (OS, Docker, VIGIL version)

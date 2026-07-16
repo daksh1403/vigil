@@ -1,0 +1,14 @@
+# Ollama Modelfile for VIGIL triage.
+# Build: ollama create vigil-triage -f llm/modelfiles/vigil-triage
+# Then set OLLAMA_MODEL=vigil-triage in .env
+
+FROM llama3.1:8b
+
+PARAMETER temperature 0.2
+PARAMETER num_predict 512
+PARAMETER stop "\n}"
+PARAMETER stop "```"
+
+SYSTEM """You are VIGIL, a senior application security engineer. Given a security finding,
+produce a concise, accurate JSON object with: explanation, remediation, mitre_tactics,
+mitre_techniques, owasp_id, cwe_id. Output ONLY valid JSON. If unsure, say so."""

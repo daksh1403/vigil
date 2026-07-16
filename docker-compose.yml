@@ -1,0 +1,152 @@
+name: vigil
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: vigil-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-vigil}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vigil}
+      POSTGRES_DB: ${POSTGRES_DB:-vigil}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vigil}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5432:5432"
+    networks: [vigil-net]
+
+  redis:
+    image: redis:7-alpine
+    container_name: vigil-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    ports:
+      - "6379:6379"
+    networks: [vigil-net]
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: vigil-ollama
+    volumes:
+      - ollamadata:/root/.ollama
+    ports:
+      - "11434:11434"
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [vigil-net]
+    # On Apple Silicon you may prefer running Ollama natively for GPU accel;
+    # this container works CPU-only for portability.
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vigil-backend
+    env_file: .env
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    ports:
+      - "8000:8000"
+    networks: [vigil-net]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.worker
+    container_name: vigil-worker
+    env_file: .env
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      scanner-bin: { condition: service_started }
+    volumes:
+      - scandata:/data
+    networks: [vigil-net]
+
+  scanner-bin:
+    build:
+      context: ./scanner-bin
+      dockerfile: Dockerfile
+    container_name: vigil-scanner-bin
+    volumes:
+      - scandata:/data
+    networks: [vigil-net]
+    entrypoint: ["sleep", "infinity"]
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: vigil-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+    depends_on:
+      backend: { condition: service_healthy }
+    ports:
+      - "3000:3000"
+    networks: [vigil-net]
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: vigil-prometheus
+    volumes:
+      - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - promdata:/prometheus
+    ports:
+      - "9090:9090"
+    networks: [vigil-net]
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: vigil-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafanadata:/var/lib/grafana
+    ports:
+      - "3001:3000"
+    depends_on: [prometheus]
+    networks: [vigil-net]
+
+  loki:
+    image: grafana/loki:latest
+    container_name: vigil-loki
+    command: -config.file=/etc/loki/local-config.yaml
+    ports:
+      - "3100:3100"
+    networks: [vigil-net]
+
+volumes:
+  pgdata:
+  redisdata:
+  ollamadata:
+  scandata:
+  promdata:
+  grafanadata:
+
+networks:
+  vigil-net:
+    driver: bridge

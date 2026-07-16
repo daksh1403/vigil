@@ -1,0 +1,34 @@
+{
+  "title": "VIGIL Overview",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {"from": "now-6h", "to": "now"},
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "Findings (total)",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "targets": [{"expr": "vigil_findings_total", "refId": "A"}]
+    },
+    {
+      "id": 2, "type": "stat", "title": "Critical findings",
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+      "targets": [{"expr": "vigil_findings_total{severity=\"critical\"}", "refId": "A"}]
+    },
+    {
+      "id": 3, "type": "stat", "title": "Scans running",
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+      "targets": [{"expr": "vigil_scans_running", "refId": "A"}]
+    },
+    {
+      "id": 4, "type": "stat", "title": "FP rate",
+      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+      "targets": [{"expr": "vigil_fp_rate", "refId": "A"}]
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "Findings over time",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 4},
+      "targets": [{"expr": "sum by (severity) (vigil_findings_total)", "refId": "A"}]
+    }
+  ]
+}
