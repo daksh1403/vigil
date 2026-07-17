@@ -1,6 +1,5 @@
 # VIGIL — Open-Source AI-Powered AppSec & Code Security Platform
 
-[![CI](https://github.com/daksh/vigil/actions/workflows/ci.yml/badge.svg)](.github/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **VIGIL** is a local-first, fully open-source security platform that orchestrates the best
@@ -33,7 +32,7 @@ explain, and map findings to MITRE ATT&CK / OWASP / CWE — for free, on a lapto
 ## Quick start
 
 ```bash
-git clone https://github.com/daksh/vigil.git && cd vigil
+git clone https://github.com/daksh1403/vigil.git && cd vigil
 cp .env.example .env
 make up            # postgres, redis, backend, worker, frontend, ollama, prometheus, grafana
 make migrate       # apply DB migrations + pgvector
